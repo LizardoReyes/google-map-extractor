@@ -116,21 +116,37 @@ def create_content(title, address, phone, rating, web_url, reviews, categories, 
         zipcode=zipcode,
     )
 
+import re
+import unicodedata
+
+import re
+
 def slugify(text: str) -> str:
     if not text:
         return ""
 
-    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
-
     text = text.lower()
-    text = text.replace("/", "-")  # reemplaza "/" por "-"
-    text = re.sub(r"\s+", "-", text)  # espacios por guiones
-    text = re.sub(r"&", "-and-", text)  # & por -and-
+
+    # Reemplaza todo tipo de espacios (incluye ideográficos, árabes, etc.) por guiones
+    text = re.sub(r"\s+", "-", text, flags=re.UNICODE)
+
+    # Reemplaza símbolos comunes
+    text = text.replace("/", "-").replace("&", "-and-")
+
+    # Elimina paréntesis, comillas, puntuación no alfabética
+    text = re.sub(r"[\(\)\[\]\{\}<>«»“”\"']", "", text)
+
+    # Elimina caracteres que NO son letras, números, guiones o caracteres CJK/árabes/coreanos
     text = re.sub(
-        r"[\(\)\[\]\{\}<>«»“”\"']", "", text
-    )  # elimina paréntesis, comillas, etc.
-    text = re.sub(r"[^\w\-]", "", text)  # elimina todo excepto palabras y guiones
-    text = re.sub(r"-{2,}", "-", text)  # múltiples guiones a uno
-    text = text.strip("-")  # quita guiones al inicio y fin
+        r"[^\w\-一-龯ぁ-んァ-ンーء-ي가-힣]",
+        "",
+        text
+    )
+
+    # Unifica guiones múltiples
+    text = re.sub(r"-{2,}", "-", text)
+
+    # Elimina guiones al inicio o fin
+    text = text.strip("-")
 
     return text

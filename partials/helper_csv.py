@@ -160,32 +160,28 @@ def guardar_csv(negocios: list[Business], ruta_salida: str):
 
 
 def filtrar_negocios(nombre_archivo_csv, ruta_salida="negocios_filtrados.csv"):
+
     # Leer archivo original sin convertir "N/A" en NaN
     df = pd.read_csv(nombre_archivo_csv, keep_default_na=False, na_values=[])
 
-    # Asegurar formato de texto y limpiar espacios
-    df['title'] = df['title'].astype(str).str.strip()
+    # Limpiar espacios por si acaso
+    df['slug'] = df['slug'].astype(str).str.strip()
 
-    # Generar columnas auxiliares para deduplicación
-    df_aux = df.copy()
-    df_aux['title_lower'] = df_aux['title'].str.lower()
-
-    # Eliminar duplicados por título y ciudad
-    df_aux = df_aux.drop_duplicates(subset=['title_lower'])
+    # Eliminar duplicados por slug directamente
+    df = df.drop_duplicates(subset=['slug'])
 
     # Convertir rating y reviews a numéricos
-    df_aux['rating'] = pd.to_numeric(df_aux['rating'], errors='coerce')
-    df_aux['reviews'] = pd.to_numeric(df_aux['reviews'], errors='coerce')
+    df['rating'] = pd.to_numeric(df['rating'], errors='coerce')
+    df['reviews'] = pd.to_numeric(df['reviews'], errors='coerce')
 
-    # Filtrar por condiciones
-    df_filtrado = df_aux[(df_aux['rating'] >= 3.5) & (df_aux['reviews'] >= 5)].copy()
+    # Filtrar por condiciones de calidad
+    df_filtrado = df[(df['rating'] >= 3.5) & (df['reviews'] >= 5)].copy()
 
     # Agregar ID autoincremental
     df_filtrado.insert(0, 'id', range(1, len(df_filtrado) + 1))
 
-    # Eliminar columnas auxiliares antes de guardar
-    df_filtrado.drop(columns=['title_lower'], inplace=True)
-
-    # Guardar resultado limpio
+    # Guardar CSV limpio
     df_filtrado.to_csv(ruta_salida, index=False)
-    print(f"✅ Filtrado a {len(df_filtrado)} negocios con ID autogenerado.")
+    print(f"✅ Filtrado a {len(df_filtrado)} negocios con ID autogenerado en '{ruta_salida}'.")
+
+

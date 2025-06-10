@@ -72,7 +72,7 @@ generar_images_csv_y_nombres(input_csv=FILENAME_CSV_FILTERED_CATEGORIZED, output
 
 # Eliminamos los archivos temporales de negocios
 os.remove(FILENAME_JSON)
-os.remove(FILENAME_CSV)
+#os.remove(FILENAME_CSV)
 os.remove(FILENAME_CSV_FILTERED)
 os.remove(FILENAME_CSV_FILTERED_CATEGORIZED)
 os.rename(FILENAME_CSV_FILTERED_CATEGORIZED_IMAGE, FILENAME_POSTS)
