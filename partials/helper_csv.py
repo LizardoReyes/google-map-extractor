@@ -120,8 +120,8 @@ def guardar_csv(negocios: list[Business], ruta_salida: str):
             google_maps = negocio.link
             price_range = negocio.price_range
             zipcode = negocio.detailed_address.postal_code if negocio.detailed_address else "N/A"
-            city = negocio.detailed_address.city if negocio.detailed_address.city else "Others"
             state = negocio.detailed_address.state if negocio.detailed_address.state else "N/A"
+            city = negocio.detailed_address.city if negocio.detailed_address.city else state
             horary = obtener_horario(negocio.hours)
             link_menu = negocio.menu.link if negocio.menu else None
             link_reservations = negocio.reservations[0].link if negocio.reservations else None

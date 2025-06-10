@@ -5,5 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
     "pandas>=2.2.3",
+    "python-slugify>=8.0.4",
     "requests>=2.32.3",
+    "unidecode>=1.4.0",
 ]

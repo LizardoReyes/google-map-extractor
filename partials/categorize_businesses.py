@@ -1,13 +1,23 @@
 import csv
 import os
 
+import csv
+import os
+import re
+
 from partials.helpers import slugify
 
+
+def get_category_name(row):
+    city = (row.get("city") or "").strip()
+    state = (row.get("state") or "").strip()
+    return city or state or "Others"
+
 def generate_categories_from_posts(posts_file: str, output_posts_file: str, categories_file: str = "categories.csv"):
-    # Cargar categorías existentes
     categories = {}
     next_id = 1
 
+    # Cargar categorías existentes
     if os.path.exists(categories_file):
         with open(categories_file, newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -27,17 +37,17 @@ def generate_categories_from_posts(posts_file: str, output_posts_file: str, cate
             return
         fieldnames = reader[0].keys()
 
-    # Crear mapeo city → category_id y actualizar si es necesario
-    city_to_id = {}
+    # Crear mapeo nombre_categoria → category_id
+    name_to_id = {}
     for row in reader:
-        city = row["city"].strip() or "Others"  # <-- Aquí se asigna "Others" si city está vacío
-        if city not in categories:
-            categories[city] = {
+        category_name = get_category_name(row)
+        if category_name not in categories:
+            categories[category_name] = {
                 "id": next_id,
-                "slug": slugify(city)
+                "slug": slugify(category_name)
             }
             next_id += 1
-        city_to_id[city] = categories[city]["id"]
+        name_to_id[category_name] = categories[category_name]["id"]
 
     # Guardar categories.csv
     with open(categories_file, "w", newline='', encoding='utf-8') as f:
@@ -57,8 +67,8 @@ def generate_categories_from_posts(posts_file: str, output_posts_file: str, cate
         writer = csv.DictWriter(f, fieldnames=new_fieldnames)
         writer.writeheader()
         for row in reader:
-            city = row["city"].strip() or "Others"
-            row["category_id"] = city_to_id[city]
+            category_name = get_category_name(row)
+            row["category_id"] = name_to_id[category_name]
             writer.writerow(row)
 
     print(f"✅ '{os.path.basename(categories_file)}' y '{os.path.basename(output_posts_file)}' fueron creados/modificados correctamente.")
