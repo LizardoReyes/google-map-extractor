@@ -1,9 +1,11 @@
+import os
 import random
 import re
-import unicodedata
-from models.Business import Business, Hour
+from pathlib import Path
 from string import Template
 from urllib.parse import urlparse
+
+from models.Business import Business, Hour
 
 
 def create_business(data):
@@ -87,11 +89,14 @@ def obtener_horario(hours: list[Hour]) -> str:
     html += "</ul>"
     return html
 
-def extract_local_phone(phone):
+def extract_local_phone(phone: str):
+    if not phone:
+        return "N/A"
+
     # Elimina el + y los dígitos del código de país (1-3 dígitos), y espacios iniciales
     return re.sub(r"^\+\d{1,3}\s*", "", phone)
 
-def create_content(title, address, phone, rating, web_url, reviews, categories, city, price_range, zipcode):
+def create_content(title: str, address: str, phone: str, rating: str, web_url: str, reviews: str, categories: str, city: str, price_range: str, zipcode: str):
 
     plantilla_html = Template(
         "<p>$title está ubicada en $address, en la ciudad de $city con código postal $zipcode "
@@ -115,11 +120,6 @@ def create_content(title, address, phone, rating, web_url, reviews, categories, 
         price_range=price_range,
         zipcode=zipcode,
     )
-
-import re
-import unicodedata
-
-import re
 
 def slugify(text: str) -> str:
     if not text:
@@ -149,4 +149,27 @@ def slugify(text: str) -> str:
     # Elimina guiones al inicio o fin
     text = text.strip("-")
 
+    # Es posible que el texto sea muy grande, así que lo acorta a 20 caracteres
+    if len(text) > 20:
+        text = text[:20]
+
+    # Es posible que el texto ya esté vacío después de las transformaciones, entonces randomiza un texto por defecto
+    if not text:
+        return "business-" + str(random.randint(1, 9999))
+
     return text
+
+def delete_files(files: list[Path]) -> None:
+    """
+    Elimina los archivos especificados en la lista.
+    :param files: Lista de rutas de archivos a eliminar.
+    """
+    for file in files:
+        try:
+            if file.exists():
+                file.unlink()
+                #print(f"✅ Archivo eliminado: {file}")
+            else:
+                print(f"⚠️ El archivo no existe: {file}")
+        except Exception as e:
+            print(f"❌ Error al eliminar el archivo {file}: {e}")

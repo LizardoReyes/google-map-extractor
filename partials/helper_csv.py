@@ -1,31 +1,32 @@
 import csv
 import json
 import os
+from pathlib import Path
+
 import pandas as pd
 
 from models.Business import Business
 from partials.helpers import obtener_dominio_base, create_content, obtener_horario, slugify
 
 
-def unir_json_de_carpeta(carpeta, ruta_salida):
+def unir_json_de_carpeta(carpeta: Path, ruta_salida: Path) -> None:
     datos_unidos = []
 
-    for archivo in os.listdir(carpeta):
-        if archivo.endswith(".json"):
-            ruta = os.path.join(carpeta, archivo)
-            with open(ruta, 'r', encoding='utf-8') as f:
+    for archivo in carpeta.iterdir():
+        if archivo.suffix == ".json" and archivo.is_file():
+            with archivo.open('r', encoding='utf-8') as f:
                 contenido = json.load(f)
                 if isinstance(contenido, list):
                     datos_unidos.extend(contenido)
                 else:
                     datos_unidos.append(contenido)
 
-    with open(ruta_salida, 'w', encoding='utf-8') as f:
+    with ruta_salida.open('w', encoding='utf-8') as f:
         json.dump(datos_unidos, f, ensure_ascii=False, indent=2)
 
-    print(f"✅ Combinados {len(datos_unidos)} registros en: {ruta_salida}")
+    print(f"✅ Combinados {len(datos_unidos)} registros en: {ruta_salida.name}")
 
-def unir_csv_en_carpeta(carpeta, salida):
+def unir_csv_en_carpeta(carpeta: Path, salida: Path):
     archivos = [f for f in os.listdir(carpeta) if f.endswith(".csv")]
     encabezado_escrito = False
 
@@ -48,7 +49,7 @@ def unir_csv_en_carpeta(carpeta, salida):
 
     print(f"✅ Archivos combinados en: {salida}")
 
-def unir_csv_y_exportar_json(carpeta_csv, archivo_salida_json):
+def unir_csv_y_exportar_json(carpeta_csv: Path, archivo_salida_json: Path):
     datos = []
 
     archivos = [f for f in os.listdir(carpeta_csv) if f.endswith('.csv')]
@@ -65,7 +66,7 @@ def unir_csv_y_exportar_json(carpeta_csv, archivo_salida_json):
 
     print(f"✅ Exportados {len(datos)} registros a {archivo_salida_json}")
 
-def leer_json_completo(ruta_archivo):
+def leer_json_completo(ruta_archivo: Path):
     """
     Lee un archivo JSON con estructura de lista de diccionarios complejos
     y devuelve su contenido como un objeto Python.
@@ -85,9 +86,9 @@ def imprimir_datos_json(data):
                 print(f"{espacio}{clave}:")
                 imprimir_recursivo(valor, indent + 1)
         elif isinstance(obj, list):
-            for i, item in enumerate(obj):
-                print(f"{espacio}- [{i}]")
-                imprimir_recursivo(item, indent + 1)
+            for ii, item1 in enumerate(obj):
+                print(f"{espacio}- [{ii}]")
+                imprimir_recursivo(item1, indent + 1)
         else:
             print(f"{espacio}{obj}")
 
@@ -95,93 +96,110 @@ def imprimir_datos_json(data):
         print(f"\n===== Restaurante {i + 1} =====")
         imprimir_recursivo(item)
 
-def guardar_csv(negocios: list[Business], ruta_salida: str):
-    with (open(ruta_salida, mode='w', newline='', encoding='utf-8') as archivo):
-        writer = csv.writer(archivo)
+def guardar_business(business: list[Business], ruta_salida: Path) -> None:
+    datos_json = []
 
-        # Escribir encabezado
-        writer.writerow(['title', 'slug', 'rating', 'reviews', 'reviews_link', 'web_url', 'web_url_root', 'phone', 'image_1', 'image_2', 'image_3', 'categories', 'address', 'google_maps_url' , 'price_range', 'zipcode', 'city', 'state', 'hoary', 'link_menu', 'link_reservations', 'link_order_online', 'content'])
+    for negocio in business:
+        title = negocio.name
+        slug = slugify(title)
+        rating = negocio.rating
+        reviews = negocio.reviews
+        reviews_link = negocio.reviews_link
+        web_url = negocio.website or reviews_link
+        web_url_root = obtener_dominio_base(web_url)
+        phone = negocio.phone
+        image_1 = negocio.featured_image or None
+        image_2 = negocio.images[0].link if negocio.images else None
+        image_3 = negocio.images[1].link if len(negocio.images) > 1 else None
+        categories = ", ".join(negocio.categories).lower() if negocio.categories else "N/A"
+        address = negocio.address
+        google_maps = negocio.link
+        price_range = negocio.price_range
+        zipcode = negocio.detailed_address.postal_code if negocio.detailed_address else "N/A"
+        state = negocio.detailed_address.state if negocio.detailed_address and negocio.detailed_address.state else "General"
+        city = negocio.detailed_address.city if negocio.detailed_address and negocio.detailed_address.city else state
+        hoary = obtener_horario(negocio.hours)
+        link_menu = negocio.menu.link if negocio.menu else None
+        link_reservations = negocio.reservations[0].link if negocio.reservations else None
+        link_order_online = negocio.order_online_links[0].link if negocio.order_online_links else None
 
-        # Escribir datos de cada negocio
-        for negocio in negocios:
-            title = negocio.name
-            slug = slugify(title)
-            rating = negocio.rating
-            reviews = negocio.reviews
-            reviews_link = negocio.reviews_link
-            web_url = negocio.website if negocio.website else negocio.reviews_link
-            web_url_root = obtener_dominio_base(web_url)
-            phone = negocio.phone or "N/A"
-            image_1 = negocio.featured_image if negocio.featured_image else None
-            image_2 = negocio.images[0].link if negocio.images else None
-            image_3 = negocio.images[1].link if len(negocio.images) > 1 else None
-            categories = ", ".join(negocio.categories).lower() if negocio.categories else "N/A"
-            address = negocio.address
-            google_maps = negocio.link
-            price_range = negocio.price_range
-            zipcode = negocio.detailed_address.postal_code if negocio.detailed_address else "N/A"
-            state = negocio.detailed_address.state if negocio.detailed_address.state else "N/A"
-            city = negocio.detailed_address.city if negocio.detailed_address.city else state
-            horary = obtener_horario(negocio.hours)
-            link_menu = negocio.menu.link if negocio.menu else None
-            link_reservations = negocio.reservations[0].link if negocio.reservations else None
-            link_order_online = negocio.order_online_links[0].link if negocio.order_online_links else None
-            content = create_content(
-                title=title, address=address, phone=phone, rating=rating, reviews=reviews, web_url=web_url, categories=categories, price_range=price_range, zipcode=zipcode, city=city,
-            )
+        content = create_content(
+            title=title,
+            address=address,
+            phone=phone,
+            rating=rating,
+            reviews=reviews,
+            web_url=web_url,
+            categories=categories,
+            price_range=price_range,
+            zipcode=zipcode,
+            city=city,
+        )
 
-            writer.writerow([
-                title,
-                slug,
-                rating,
-                reviews,
-                reviews_link,
-                web_url,
-                web_url_root,
-                phone,
-                image_1,
-                image_2,
-                image_3,
-                categories,
-                address,
-                google_maps,
-                price_range,
-                zipcode,
-                city,
-                state,
-                horary,
-                link_menu,
-                link_reservations,
-                link_order_online,
-                content,
-            ])
+        datos_json.append({
+            "title": title,
+            "slug": slug,
+            "rating": rating,
+            "reviews": reviews,
+            "reviews_link": reviews_link,
+            "web_url": web_url,
+            "web_url_root": web_url_root,
+            "phone": phone,
+            "image_1": image_1,
+            "image_2": image_2,
+            "image_3": image_3,
+            "categories": categories,
+            "address": address,
+            "google_maps_url": google_maps,
+            "price_range": price_range,
+            "zipcode": zipcode,
+            "city": city,
+            "state": state,
+            "hoary": hoary,
+            "link_menu": link_menu,
+            "link_reservations": link_reservations,
+            "link_order_online": link_order_online,
+            "content": content,
+        })
 
-    print(f"✅ Datos guardados en: {ruta_salida} ({len(negocios)} negocios)")
+    with ruta_salida.open('w', encoding='utf-8') as archivo:
+        json.dump(datos_json, archivo, ensure_ascii=False, indent=2)
 
+    print(f"✅ Datos guardados en: {ruta_salida.name} ({len(business)} negocios)")
 
-def filtrar_negocios(nombre_archivo_csv, ruta_salida="negocios_filtrados.csv"):
+def filtrar_negocios(nombre_archivo_json: Path, ruta_salida: Path, id_inicio: int = 1,
+                     min_rating: float = 3.5, min_reviews: int = 5) -> None:
 
-    # Leer archivo original sin convertir "N/A" en NaN
-    df = pd.read_csv(nombre_archivo_csv, keep_default_na=False, na_values=[])
+    # Leer archivo JSON
+    with open(nombre_archivo_json, 'r', encoding='utf-8') as archivo:
+        datos = json.load(archivo)
+
+    df = pd.DataFrame(datos)
 
     # Limpiar espacios por si acaso
     df['slug'] = df['slug'].astype(str).str.strip()
+    df['title'] = df['title'].astype(str).str.strip()
 
     # Eliminar duplicados por slug directamente
     df = df.drop_duplicates(subset=['slug'])
+    # Eliminar filas sin slug, rating o reviews
+    df.dropna(subset=['slug', 'rating', 'reviews'], inplace=True)
 
     # Convertir rating y reviews a numéricos
     df['rating'] = pd.to_numeric(df['rating'], errors='coerce')
     df['reviews'] = pd.to_numeric(df['reviews'], errors='coerce')
 
     # Filtrar por condiciones de calidad
-    df_filtrado = df[(df['rating'] >= 3.5) & (df['reviews'] >= 5)].copy()
+    df_filtrado = df[(df['rating'] >= min_rating) & (df['reviews'] >= min_reviews)].copy()
 
-    # Agregar ID autoincremental
-    df_filtrado.insert(0, 'id', range(1, len(df_filtrado) + 1))
+    # Agregar ID auto-incremental desde id_inicio
+    df_filtrado.insert(0, 'id', range(id_inicio, id_inicio + len(df_filtrado)))
 
-    # Guardar CSV limpio
-    df_filtrado.to_csv(ruta_salida, index=False)
-    print(f"✅ Filtrado a {len(df_filtrado)} negocios con ID autogenerado en '{ruta_salida}'.")
+    # Eliminar "&gl=PE" de "reviews_link" y "web_url"
+    df_filtrado['reviews_link'] = df_filtrado['reviews_link'].str.replace('&gl=PE', '', regex=False)
 
+    # Guardar archivo en formato JSON
+    with open(ruta_salida, 'w', encoding='utf-8') as salida:
+        json.dump(df_filtrado.to_dict(orient='records'), salida, ensure_ascii=False, indent=2)
 
+    print(f"✅ Filtrado a {len(df_filtrado)} negocios con ID desde {id_inicio} en '{ruta_salida}'.")

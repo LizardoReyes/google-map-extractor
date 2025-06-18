@@ -1,9 +1,6 @@
-import csv
+import json
 import os
-
-import csv
-import os
-import re
+from pathlib import Path
 
 from partials.helpers import slugify
 
@@ -13,34 +10,34 @@ def get_category_name(row):
     state = (row.get("state") or "").strip()
     return city or state or "Others"
 
-def generate_categories_from_posts(posts_file: str, output_posts_file: str, categories_file: str = "categories.csv"):
+
+def generate_categories_from_posts_json(posts_file: Path, output_posts_file: Path, categories_file: Path):
     categories = {}
     next_id = 1
 
     # Cargar categorías existentes
     if os.path.exists(categories_file):
-        with open(categories_file, newline='', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                categories[row["name"]] = {
-                    "id": int(row["id"]),
-                    "slug": row["slug"]
+        with open(categories_file, encoding='utf-8') as f:
+            categories_data = json.load(f)
+            for item in categories_data:
+                categories[item["name"]] = {
+                    "id": int(item["id"]),
+                    "slug": item["slug"]
                 }
             if categories:
                 next_id = max(c["id"] for c in categories.values()) + 1
 
     # Leer posts
-    with open(posts_file, newline='', encoding='utf-8') as f:
-        reader = list(csv.DictReader(f))
-        if not reader:
+    with open(posts_file, encoding='utf-8') as f:
+        posts = json.load(f)
+        if not posts:
             print("⚠️ El archivo de posts está vacío.")
             return
-        fieldnames = reader[0].keys()
 
     # Crear mapeo nombre_categoria → category_id
     name_to_id = {}
-    for row in reader:
-        category_name = get_category_name(row)
+    for post in posts:
+        category_name = get_category_name(post)
         if category_name not in categories:
             categories[category_name] = {
                 "id": next_id,
@@ -49,26 +46,20 @@ def generate_categories_from_posts(posts_file: str, output_posts_file: str, cate
             next_id += 1
         name_to_id[category_name] = categories[category_name]["id"]
 
-    # Guardar categories.csv
-    with open(categories_file, "w", newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=["id", "name", "slug"])
-        writer.writeheader()
-        for name, data in sorted(categories.items(), key=lambda x: x[1]["id"]):
-            writer.writerow({
-                "id": data["id"],
-                "name": name,
-                "slug": data["slug"]
-            })
+    # Guardar categories.json
+    with open(categories_file, "w", encoding='utf-8') as f:
+        categorias_list = [
+            {"id": data["id"], "name": name, "slug": data["slug"]}
+            for name, data in sorted(categories.items(), key=lambda x: x[1]["id"])
+        ]
+        json.dump(categorias_list, f, ensure_ascii=False, indent=2)
 
-    # Añadir category_id a posts
-    new_fieldnames = list(fieldnames) + ["category_id"] if "category_id" not in fieldnames else list(fieldnames)
+    # Añadir category_id a posts y guardar nuevo archivo
+    for post in posts:
+        category_name = get_category_name(post)
+        post["category_id"] = name_to_id[category_name]
 
-    with open(output_posts_file, "w", newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=new_fieldnames)
-        writer.writeheader()
-        for row in reader:
-            category_name = get_category_name(row)
-            row["category_id"] = name_to_id[category_name]
-            writer.writerow(row)
+    with open(output_posts_file, "w", encoding='utf-8') as f:
+        json.dump(posts, f, ensure_ascii=False, indent=2)
 
     print(f"✅ '{os.path.basename(categories_file)}' y '{os.path.basename(output_posts_file)}' fueron creados/modificados correctamente.")
