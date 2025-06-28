@@ -1,6 +1,7 @@
-import pandas as pd
-import json
 from pathlib import Path
+
+import pandas as pd
+
 
 def convertir_csv_a_json(csv_path: Path, json_path: Path, orient: str = "records") -> None:
     """
@@ -14,7 +15,7 @@ def convertir_csv_a_json(csv_path: Path, json_path: Path, orient: str = "records
     try:
         df = pd.read_csv(csv_path)
         with json_path.open("w", encoding="utf-8") as f:
-            json.dump(df.to_dict(orient=orient), f, ensure_ascii=False, indent=2)
+            f.write(df.to_json(orient=orient, force_ascii=False, indent=2))
         print(f"✅ Archivo JSON generado exitosamente en: {json_path}")
     except Exception as e:
         print(f"❌ Error al convertir CSV a JSON: {e}")
