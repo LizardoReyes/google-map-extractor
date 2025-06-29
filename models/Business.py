@@ -180,17 +180,18 @@ class About:
         return [Option(c) for c in self._data.get('options', [])]
 
 class Image:
-
     def __init__(self, data):
+        if not isinstance(data, dict):
+            raise TypeError(f"Se esperaba un dict en Image, pero se recibió: {data}")
         self._data = data
 
     @property
     def about(self):
-        return self._data['about']
+        return self._data.get('about')
 
     @property
     def link(self):
-        return self._data['link']
+        return self._data.get('link')
 
 class MostPopularTime:
 
