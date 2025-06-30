@@ -15,7 +15,7 @@ def main():
     # Leemos un archivo JSON, creamos objetos Business y guardamos en un nuevo archivo JSON
     raw_data = leer_json_completo(ruta_archivo=FILE_BUSINESSES_JSON_RAW)
     business = create_business(raw_data)
-    guardar_business(business=business, ruta_salida=FILE_BUSINESSES_JSON)
+    guardar_business(business=business, ruta_salida=FILE_BUSINESSES_JSON, lang="en")
 
     # Filtramos los negocios por ciertas condiciones
     filtrar_negocios(nombre_archivo_json=FILE_BUSINESSES_JSON, ruta_salida=FILE_BUSINESSES_FILTERED, id_inicio=1)

@@ -96,7 +96,7 @@ def imprimir_datos_json(data):
         print(f"\n===== Restaurante {i + 1} =====")
         imprimir_recursivo(item)
 
-def guardar_business(business: list[Business], ruta_salida: Path) -> None:
+def guardar_business(business: list[Business], ruta_salida: Path, lang: str = "en") -> None:
     datos_json = []
 
     for negocio in business:
@@ -118,7 +118,7 @@ def guardar_business(business: list[Business], ruta_salida: Path) -> None:
         zipcode = negocio.detailed_address.postal_code if negocio.detailed_address else "N/A"
         state = negocio.detailed_address.state if negocio.detailed_address and negocio.detailed_address.state else "General"
         city = negocio.detailed_address.city if negocio.detailed_address and negocio.detailed_address.city else state
-        hoary = obtener_horario(negocio.hours)
+        hoary = obtener_horario(negocio.hours, lang)
         link_menu = negocio.menu.link if negocio.menu else None
         link_reservations = negocio.reservations[0].link if negocio.reservations else None
         link_order_online = negocio.order_online_links[0].link if negocio.order_online_links else None
