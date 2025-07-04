@@ -1,24 +1,26 @@
 import os
 from pathlib import Path
 
-from json_to_sqlite import convert_json_to_sqlite
+from convert_json_to_csv import convert_json_to_csv
+from convert_json_to_sqlite import convert_json_to_sqlite
 from partials.categorize_businesses import generate_categories_from_posts_json
-from partials.generar_images_json_y_nombres import generar_images_json_y_nombres
-from partials.helper_csv import unir_json_de_carpeta, leer_json_completo, filtrar_negocios, \
-    guardar_business
+from partials.generar_images_json_y_nombres import generate_images_json_and_names
+from partials.helper_csv import merge_json_in_folder, read_json_full, filter_businesses, \
+    save_business
 from partials.helpers import create_business, delete_files
 
 def main():
     # Unir los archivos JSON de la carpeta "businesses" y guardarlos en un unico archivo JSON
-    unir_json_de_carpeta(carpeta=DIR_BUSINESSES, ruta_salida=FILE_BUSINESSES_JSON_RAW)
+    merge_json_in_folder(carpeta=DIR_BUSINESSES, ruta_salida=FILE_BUSINESSES_JSON_RAW)
 
     # Leemos un archivo JSON, creamos objetos Business y guardamos en un nuevo archivo JSON
-    raw_data = leer_json_completo(ruta_archivo=FILE_BUSINESSES_JSON_RAW)
+    raw_data = read_json_full(ruta_archivo=FILE_BUSINESSES_JSON_RAW)
     business = create_business(raw_data)
-    guardar_business(business=business, ruta_salida=FILE_BUSINESSES_JSON, lang="en")
+
+    save_business(business=business, ruta_salida=FILE_BUSINESSES_JSON, lang="en")
 
     # Filtramos los negocios por ciertas condiciones
-    filtrar_negocios(nombre_archivo_json=FILE_BUSINESSES_JSON, ruta_salida=FILE_BUSINESSES_FILTERED, id_inicio=1)
+    filter_businesses(nombre_archivo_json=FILE_BUSINESSES_JSON, ruta_salida=FILE_BUSINESSES_FILTERED, id_inicio=1)
 
     # Generamos las categorías a partir de los posts y guardamos en un nuevo archivo CSV
     generate_categories_from_posts_json(posts_file=FILE_BUSINESSES_FILTERED,
@@ -26,14 +28,18 @@ def main():
                                         categories_file=FILE_CATEGORIES_JSON)
 
     # Agregamos el campo imagen a los negocios en el CSV filtrado y categorizado
-    generar_images_json_y_nombres(input_json=FILE_BUSINESSES_CATEGORIZED,
-                                  output_json=FILE_BUSINESSES_WITH_IMAGES,
-                                  image_json=FILE_IMAGE_JSON)
+    generate_images_json_and_names(input_json=FILE_BUSINESSES_CATEGORIZED,
+                                   output_json=FILE_BUSINESSES_WITH_IMAGES,
+                                   image_json=FILE_IMAGE_JSON)
 
     # Eliminamos los archivos temporales de negocios
     delete_files(
         [FILE_BUSINESSES_JSON_RAW, FILE_BUSINESSES_JSON, FILE_BUSINESSES_FILTERED, FILE_BUSINESSES_CATEGORIZED])
     os.rename(FILE_BUSINESSES_WITH_IMAGES, FILE_POSTS_JSON)
+
+    # Creamos la version en CSV
+    convert_json_to_csv(json_path=FILE_POSTS_JSON, csv_path=FILE_POSTS_CSV)
+    convert_json_to_csv(json_path=FILE_CATEGORIES_JSON, csv_path=FILE_CATEGORIES_CSV)
 
     # Convertimos los archivos JSON de posts y categorías a una base de datos SQLite
     convert_json_to_sqlite(
@@ -52,7 +58,9 @@ if __name__ == "__main__":
 
     # Categorías y posts
     FILE_CATEGORIES_JSON = BASE_OUTPUT_DIR / "categories.json"
+    FILE_CATEGORIES_CSV = BASE_OUTPUT_DIR / "categories.csv"
     FILE_POSTS_JSON = BASE_OUTPUT_DIR / "posts.json"
+    FILE_POSTS_CSV = BASE_OUTPUT_DIR / "posts.csv"
 
     # Archivos JSON y CSV
     FILE_BUSINESSES_JSON_RAW = BASE_OUTPUT_DIR / "businesses_raw.json"

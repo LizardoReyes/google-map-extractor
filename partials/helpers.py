@@ -13,7 +13,8 @@ JSON_PATH = BASE_DIR / "unavailable_schedule_messages.json"
 def create_business(data):
     return[Business(item) for item in data]
 
-def obtener_dominio_base(url):
+
+def get_base_domain(url):
     """
     Extrae el dominio base de una URL.
     :param url: URL de la que se extraerá el dominio.
@@ -26,7 +27,8 @@ def obtener_dominio_base(url):
         dominio = dominio[4:]
     return dominio
 
-def obtener_horario(hours: list[Hour], lang: str = "en") -> str:
+
+def get_schedule(hours: list[Hour], lang: str = "en") -> str:
 
     # Cargar el archivo correctamente
     with open(JSON_PATH, "r", encoding="utf-8") as f:
@@ -47,12 +49,14 @@ def obtener_horario(hours: list[Hour], lang: str = "en") -> str:
     html += "</ul>"
     return html
 
+
 def extract_local_phone(phone: str):
     if not phone:
         return "N/A"
 
     # Elimina el + y los dígitos del código de país (1-3 dígitos), y espacios iniciales
     return re.sub(r"^\+\d{1,3}\s*", "", phone)
+
 
 def create_content(title: str, address: str, phone: str, rating: str, web_url: str, reviews: str, categories: str, city: str, price_range: str, zipcode: str):
 
@@ -71,13 +75,14 @@ def create_content(title: str, address: str, phone: str, rating: str, web_url: s
         phone=extract_local_phone(phone),
         rating=rating,
         web_url=web_url,
-        web_url_root=obtener_dominio_base(web_url),
+        web_url_root=get_base_domain(web_url),
         reviews=reviews,
         categories=categories,
         city=city,
         price_range=price_range,
         zipcode=zipcode,
     )
+
 
 def slugify(text: str) -> str:
     if not text:
@@ -116,6 +121,7 @@ def slugify(text: str) -> str:
         return "business" + str(random.randint(1, 9999))
 
     return text
+
 
 def delete_files(files: list[Path]) -> None:
     """

@@ -6,7 +6,7 @@ import json
 """ Este script recorre un archivo JSON y convierte cualquier campo que sea una cadena de texto con formato JSON válido en su estructura correspondiente (dict o list).
 """
 
-def intentar_parse_json(valor):
+def try_parse_json(valor):
     if isinstance(valor, str):
         try:
             # Intenta decodificar como JSON
@@ -18,28 +18,30 @@ def intentar_parse_json(valor):
             pass
     return valor
 
-def parsear_campos_json_recursivo(data):
+
+def parse_json_fields_recursively(data):
     """
     Recorre un dict o lista de dicts y convierte cualquier string que sea JSON en su estructura correspondiente.
     """
     if isinstance(data, dict):
         return {
-            clave: parsear_campos_json_recursivo(intentar_parse_json(valor))
+            clave: parse_json_fields_recursively(try_parse_json(valor))
             for clave, valor in data.items()
         }
     elif isinstance(data, list):
         return [
-            parsear_campos_json_recursivo(intentar_parse_json(item))
+            parse_json_fields_recursively(try_parse_json(item))
             for item in data
         ]
     else:
         return data
 
+
 def main():
     with open("output/businesses_raw.json", "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    data_procesada = parsear_campos_json_recursivo(data)
+    data_procesada = parse_json_fields_recursively(data)
     with open("output/businesses_processed.json", "w", encoding="utf-8") as f:
         json.dump(data_procesada, f, ensure_ascii=False, indent=2)
 

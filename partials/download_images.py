@@ -14,7 +14,7 @@ HEADERS = {
 }
 
 
-def verificar_url_imagen(url: str) -> bool:
+def verify_image_url(url: str) -> bool:
     try:
         response = requests.head(url, headers=HEADERS, timeout=5, allow_redirects=True)
         return response.status_code == 200
@@ -22,14 +22,14 @@ def verificar_url_imagen(url: str) -> bool:
         return False
 
 
-def generar_nombre_imagen(title: str, contador: int, url: str) -> str:
+def generate_image_name(title: str, contador: int, url: str) -> str:
     ext = os.path.splitext(urlparse(url).path)[1].lower()
     if ext not in [".jpg", ".jpeg", ".png", ".webp"]:
         ext = ".jpg"
     return f"{slugify(title)}-{contador}{ext}"
 
 
-def procesar_imagenes_csv(name_csv: str, images_dir: str = "images") -> None:
+def process_images_from_csv(name_csv: str, images_dir: str = "images") -> None:
     BASE_DIR = Path(__file__).resolve().parent
     IMAGES_DIR = BASE_DIR.parent / images_dir
     os.makedirs(IMAGES_DIR, exist_ok=True)
@@ -74,7 +74,7 @@ def procesar_imagenes_csv(name_csv: str, images_dir: str = "images") -> None:
                 if not url:
                     continue
 
-                nombre_temp = generar_nombre_imagen(title, image_counter, url)
+                nombre_temp = generate_image_name(title, image_counter, url)
                 ruta_destino = IMAGES_DIR / nombre_temp
 
                 if ruta_destino.exists():
@@ -84,7 +84,7 @@ def procesar_imagenes_csv(name_csv: str, images_dir: str = "images") -> None:
                     imagen_valida = True
                     break
 
-                if verificar_url_imagen(url):
+                if verify_image_url(url):
                     row["image"] = nombre_temp
                     image_counter += 1
                     asignadas += 1
@@ -103,7 +103,7 @@ def procesar_imagenes_csv(name_csv: str, images_dir: str = "images") -> None:
     print(f"\n✅ Validación terminada: {asignadas} imágenes asignadas o confirmadas localmente.")
 
 
-def descargar_imagenes_validadas(name_csv: str, images_dir: str = "images") -> None:
+def download_validated_images(name_csv: str, images_dir: str = "images") -> None:
     BASE_DIR = Path(__file__).resolve().parent
     IMAGES_DIR = BASE_DIR.parent / images_dir
     os.makedirs(IMAGES_DIR, exist_ok=True)

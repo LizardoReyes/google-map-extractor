@@ -1,10 +1,12 @@
-import csv
-import os
 from pathlib import Path
+
 import pandas as pd
 
-def verificar_imagenes_faltantes(csv_path: str, carpeta_imagenes: str = "images", salida_csv: str = "imagenes_faltantes.csv") -> None:
-    df = pd.read_csv(csv_path)
+from partials.helper_csv import read_csv
+
+
+def check_missing_images(csv_path: str, carpeta_imagenes: str = "images", salida_csv: str = "imagenes_faltantes.csv") -> None:
+    df = read_csv(Path(csv_path))
     imagenes_dir = Path(carpeta_imagenes)
 
     if "image" not in df.columns:

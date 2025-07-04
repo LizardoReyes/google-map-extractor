@@ -6,10 +6,28 @@ from pathlib import Path
 import pandas as pd
 
 from models.Business import Business
-from partials.helpers import obtener_dominio_base, create_content, obtener_horario, slugify
+from partials.helpers import get_base_domain, create_content, get_schedule, slugify
+
+def read_csv(csv_path: Path, *, fallback_engine: str = "python", dtype_backend: str = "pyarrow") -> pd.DataFrame:
+    """
+    Intenta leer un CSV usando PyArrow para mayor eficiencia, y hace fallback automático si falla.
+
+    Args:
+        csv_path (Path): Ruta al archivo CSV.
+        fallback_engine (str): Motor a usar si falla PyArrow (por defecto "python").
+        dtype_backend (str): Backend de tipos de datos (por defecto "pyarrow").
+
+    Returns:
+        pd.DataFrame: DataFrame resultante.
+    """
+    try:
+        return pd.read_csv(csv_path, engine="pyarrow", dtype_backend=dtype_backend)
+    except Exception as e:
+        print(f"⚠️ Fallback a engine='{fallback_engine}' por error en PyArrow: {e}")
+        return pd.read_csv(csv_path, engine=fallback_engine)
 
 
-def unir_json_de_carpeta(carpeta: Path, ruta_salida: Path) -> None:
+def merge_json_in_folder(carpeta: Path, ruta_salida: Path) -> None:
     datos_unidos = []
 
     for archivo in carpeta.iterdir():
@@ -26,7 +44,8 @@ def unir_json_de_carpeta(carpeta: Path, ruta_salida: Path) -> None:
 
     print(f"✅ Combinados {len(datos_unidos)} registros en: {ruta_salida.name}")
 
-def unir_csv_en_carpeta(carpeta: Path, salida: Path):
+
+def merge_csv_in_folder(carpeta: Path, salida: Path):
     archivos = [f for f in os.listdir(carpeta) if f.endswith(".csv")]
     encabezado_escrito = False
 
@@ -49,7 +68,8 @@ def unir_csv_en_carpeta(carpeta: Path, salida: Path):
 
     print(f"✅ Archivos combinados en: {salida}")
 
-def unir_csv_y_exportar_json(carpeta_csv: Path, archivo_salida_json: Path):
+
+def join_csv_and_export_json(carpeta_csv: Path, archivo_salida_json: Path):
     datos = []
 
     archivos = [f for f in os.listdir(carpeta_csv) if f.endswith('.csv')]
@@ -66,7 +86,8 @@ def unir_csv_y_exportar_json(carpeta_csv: Path, archivo_salida_json: Path):
 
     print(f"✅ Exportados {len(datos)} registros a {archivo_salida_json}")
 
-def leer_json_completo(ruta_archivo: Path):
+
+def read_json_full(ruta_archivo: Path):
     """
     Lee un archivo JSON con estructura de lista de diccionarios complejos
     y devuelve su contenido como un objeto Python.
@@ -75,7 +96,8 @@ def leer_json_completo(ruta_archivo: Path):
         data = json.load(archivo)
     return data
 
-def imprimir_datos_json(data):
+
+def print_json_data(data):
     """
     Recorre e imprime todos los campos de cada objeto en el JSON, incluyendo estructuras anidadas.
     """
@@ -96,7 +118,8 @@ def imprimir_datos_json(data):
         print(f"\n===== Restaurante {i + 1} =====")
         imprimir_recursivo(item)
 
-def guardar_business(business: list[Business], ruta_salida: Path, lang: str = "en") -> None:
+
+def save_business(business: list[Business], ruta_salida: Path, lang: str = "en") -> None:
     datos_json = []
 
     for negocio in business:
@@ -106,7 +129,7 @@ def guardar_business(business: list[Business], ruta_salida: Path, lang: str = "e
         reviews = negocio.reviews
         reviews_link = negocio.reviews_link
         web_url = negocio.website or reviews_link
-        web_url_root = obtener_dominio_base(web_url)
+        web_url_root = get_base_domain(web_url)
         phone = negocio.phone
         image_1 = negocio.featured_image or None
         image_2 = negocio.images[0].link if negocio.images else None
@@ -118,7 +141,7 @@ def guardar_business(business: list[Business], ruta_salida: Path, lang: str = "e
         zipcode = negocio.detailed_address.postal_code if negocio.detailed_address else "N/A"
         state = negocio.detailed_address.state if negocio.detailed_address and negocio.detailed_address.state else "General"
         city = negocio.detailed_address.city if negocio.detailed_address and negocio.detailed_address.city else state
-        hoary = obtener_horario(negocio.hours, lang)
+        hoary = get_schedule(negocio.hours, lang)
         link_menu = negocio.menu.link if negocio.menu else None
         link_reservations = negocio.reservations[0].link if negocio.reservations else None
         link_order_online = negocio.order_online_links[0].link if negocio.order_online_links else None
@@ -167,8 +190,9 @@ def guardar_business(business: list[Business], ruta_salida: Path, lang: str = "e
 
     print(f"✅ Datos guardados en: {ruta_salida.name} ({len(business)} negocios)")
 
-def filtrar_negocios(nombre_archivo_json: Path, ruta_salida: Path, id_inicio: int = 1,
-                     min_rating: float = 3.5, min_reviews: int = 5) -> None:
+
+def filter_businesses(nombre_archivo_json: Path, ruta_salida: Path, id_inicio: int = 1,
+                      min_rating: float = 3.5, min_reviews: int = 5) -> None:
 
     # Leer archivo JSON
     with open(nombre_archivo_json, 'r', encoding='utf-8') as archivo:

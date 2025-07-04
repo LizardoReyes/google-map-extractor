@@ -6,7 +6,7 @@ import pandas as pd
 
 from partials.helpers import slugify  # Asegúrate de tener esta función
 
-def generar_images_json_y_nombres(input_json: Path, output_json: Path, image_json: Path) -> None:
+def generate_images_json_and_names(input_json: Path, output_json: Path, image_json: Path) -> None:
     # Leer archivo JSON de entrada
     with open(input_json, 'r', encoding='utf-8') as f:
         data = json.load(f)

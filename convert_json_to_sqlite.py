@@ -96,6 +96,7 @@ def convert_json_to_sqlite(json_posts: Path, json_categories: Path, db_file: Pat
 
     print(f"✅ Base de datos creada: {db_file.resolve()}")
 
+
 if __name__ == "__main__":
     # Carpetas
     BASE_DIR = Path(__file__).resolve().parent
