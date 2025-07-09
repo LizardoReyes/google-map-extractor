@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 
-from partials.helpers import slugify  # Asegúrate de tener esta función
+from partials.helpers import slugify
 
 def generate_images_json_and_names(input_json: Path, output_json: Path, image_json: Path) -> None:
     # Leer archivo JSON de entrada
@@ -59,4 +59,4 @@ def generate_images_json_and_names(input_json: Path, output_json: Path, image_js
     with open(image_json, 'w', encoding='utf-8') as f:
         json.dump(images_data, f, ensure_ascii=False, indent=2)
 
-    print(f"✅ Archivos generados:\n- {output_json.name}\n- {image_json.name}")
+    print(f"✅ '{output_json.name}' y '{image_json.name}' generados exitosamente.")

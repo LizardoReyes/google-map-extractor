@@ -6,6 +6,7 @@ from string import Template
 from urllib.parse import urlparse
 
 from models.Business import Business, Hour
+from enums.Language import Language
 
 BASE_DIR = Path(__file__).resolve().parent
 JSON_PATH = BASE_DIR / "unavailable_schedule_messages.json"
@@ -28,14 +29,14 @@ def get_base_domain(url):
     return dominio
 
 
-def get_schedule(hours: list[Hour], lang: str = "en") -> str:
+def get_schedule(hours: list[Hour], lang: Language = Language.EN) -> str:
 
     # Cargar el archivo correctamente
     with open(JSON_PATH, "r", encoding="utf-8") as f:
         unavailable_messages = json.load(f)
 
     # Asegura que exista el idioma
-    mensajes = unavailable_messages.get(lang, unavailable_messages["en"])
+    mensajes = unavailable_messages.get(lang.value, Language.EN.value)
 
     if len(hours) == 0:
         mensaje = random.choice(mensajes)
@@ -45,7 +46,7 @@ def get_schedule(hours: list[Hour], lang: str = "en") -> str:
     for item in hours:
         day = item.day
         times = ", ".join(item.times)
-        html += f'  <li><b>{day}:</b> {times}</li>'
+        html += f'<li><b>{day}:</b> {times}</li>'
     html += "</ul>"
     return html
 

@@ -6,6 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from models.Business import Business
+from enums.Language import Language
 from partials.helpers import get_base_domain, create_content, get_schedule, slugify
 
 def read_csv(csv_path: Path, *, fallback_engine: str = "python", dtype_backend: str = "pyarrow") -> pd.DataFrame:
@@ -119,7 +120,7 @@ def print_json_data(data):
         imprimir_recursivo(item)
 
 
-def save_business(business: list[Business], ruta_salida: Path, lang: str = "en") -> None:
+def save_business(business: list[Business], ruta_salida: Path, lang: Language = Language.EN) -> None:
     datos_json = []
 
     for negocio in business:

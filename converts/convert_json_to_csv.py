@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+import pyarrow
 from pathlib import Path
 
 def convert_json_to_csv(json_path: Path, csv_path: Path) -> None:
@@ -30,8 +31,8 @@ def convert_json_to_csv(json_path: Path, csv_path: Path) -> None:
 
 def main():
     # Rutas de entrada y salida
-    post_json_file = Path("output/posts.json")
-    post_csv_file = Path("output/posts.csv")
+    post_json_file = Path("../output/posts.json")
+    post_csv_file = Path("../output/posts.csv")
     #categories_json_file = Path("output/categories.json")
     #categories_csv_file = Path("output/categories.csv")
 

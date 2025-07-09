@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
 
-from convert_json_to_csv import convert_json_to_csv
-from convert_json_to_sqlite import convert_json_to_sqlite
+from converts.convert_json_to_csv import convert_json_to_csv
+from converts.convert_json_to_sqlite import convert_json_to_sqlite
+from enums.Language import Language
 from partials.categorize_businesses import generate_categories_from_posts_json
-from partials.generar_images_json_y_nombres import generate_images_json_and_names
+from partials.generate_images_json_and_names import generate_images_json_and_names
 from partials.helper_csv import merge_json_in_folder, read_json_full, filter_businesses, \
     save_business
 from partials.helpers import create_business, delete_files
@@ -16,8 +17,7 @@ def main():
     # Leemos un archivo JSON, creamos objetos Business y guardamos en un nuevo archivo JSON
     raw_data = read_json_full(ruta_archivo=FILE_BUSINESSES_JSON_RAW)
     business = create_business(raw_data)
-
-    save_business(business=business, ruta_salida=FILE_BUSINESSES_JSON, lang="en")
+    save_business(business=business, ruta_salida=FILE_BUSINESSES_JSON, lang=Language.EN)
 
     # Filtramos los negocios por ciertas condiciones
     filter_businesses(nombre_archivo_json=FILE_BUSINESSES_JSON, ruta_salida=FILE_BUSINESSES_FILTERED, id_inicio=1)
@@ -34,7 +34,8 @@ def main():
 
     # Eliminamos los archivos temporales de negocios
     delete_files(
-        [FILE_BUSINESSES_JSON_RAW, FILE_BUSINESSES_JSON, FILE_BUSINESSES_FILTERED, FILE_BUSINESSES_CATEGORIZED])
+        [FILE_BUSINESSES_JSON_RAW, FILE_BUSINESSES_JSON, FILE_BUSINESSES_FILTERED, FILE_BUSINESSES_CATEGORIZED,
+         FILE_POSTS_CSV, FILE_POSTS_JSON])
     os.rename(FILE_BUSINESSES_WITH_IMAGES, FILE_POSTS_JSON)
 
     # Creamos la version en CSV

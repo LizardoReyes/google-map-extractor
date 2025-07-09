@@ -4,7 +4,7 @@ from convert_csv_to_json import convert_csv_to_json
 
 
 def main():
-    carpeta = Path("businesses")
+    carpeta = Path("../businesses")
     if not carpeta.exists():
         print(f"❌ Carpeta no encontrada: {carpeta}")
         return
