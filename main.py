@@ -17,7 +17,7 @@ def main():
     # Leemos un archivo JSON, creamos objetos Business y guardamos en un nuevo archivo JSON
     raw_data = read_json_full(ruta_archivo=FILE_BUSINESSES_JSON_RAW)
     business = create_business(raw_data)
-    save_business(business=business, ruta_salida=FILE_BUSINESSES_JSON, lang=Language.EN)
+    save_business(business=business, ruta_salida=FILE_BUSINESSES_JSON, lang=LANGUAGE)
 
     # Filtramos los negocios por ciertas condiciones
     filter_businesses(nombre_archivo_json=FILE_BUSINESSES_JSON, ruta_salida=FILE_BUSINESSES_FILTERED, id_inicio=1)
@@ -51,6 +51,10 @@ def main():
 
 
 if __name__ == "__main__":
+
+    # Idioma
+    LANGUAGE = Language.ZH
+
     # Carpetas
     BASE_DIR = Path(__file__).resolve().parent
     BASE_OUTPUT_DIR = BASE_DIR / "output"

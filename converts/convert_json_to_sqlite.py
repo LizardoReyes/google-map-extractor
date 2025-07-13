@@ -99,7 +99,7 @@ def convert_json_to_sqlite(json_posts: Path, json_categories: Path, db_file: Pat
 
 if __name__ == "__main__":
     # Carpetas
-    BASE_DIR = Path(__file__).resolve().parent
+    BASE_DIR = Path(__file__).resolve().parent.parent
     BASE_OUTPUT_DIR = BASE_DIR / "output"
 
     # Categorías y posts

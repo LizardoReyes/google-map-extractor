@@ -7,7 +7,7 @@ import pandas as pd
 
 from models.Business import Business
 from enums.Language import Language
-from partials.helpers import get_base_domain, create_content, get_schedule, slugify
+from partials.helpers import get_base_domain, create_content, get_translated_schedule, slugify
 
 def read_csv(csv_path: Path, *, fallback_engine: str = "python", dtype_backend: str = "pyarrow") -> pd.DataFrame:
     """
@@ -142,7 +142,7 @@ def save_business(business: list[Business], ruta_salida: Path, lang: Language = 
         zipcode = negocio.detailed_address.postal_code if negocio.detailed_address else "N/A"
         state = negocio.detailed_address.state if negocio.detailed_address and negocio.detailed_address.state else "General"
         city = negocio.detailed_address.city if negocio.detailed_address and negocio.detailed_address.city else state
-        hoary = get_schedule(negocio.hours, lang)
+        hoary = get_translated_schedule(negocio.hours, lang)
         link_menu = negocio.menu.link if negocio.menu else None
         link_reservations = negocio.reservations[0].link if negocio.reservations else None
         link_order_online = negocio.order_online_links[0].link if negocio.order_online_links else None
@@ -158,6 +158,7 @@ def save_business(business: list[Business], ruta_salida: Path, lang: Language = 
             price_range=price_range,
             zipcode=zipcode,
             city=city,
+            lang=lang,
         )
 
         datos_json.append({
@@ -193,8 +194,7 @@ def save_business(business: list[Business], ruta_salida: Path, lang: Language = 
 
 
 def filter_businesses(nombre_archivo_json: Path, ruta_salida: Path, id_inicio: int = 1,
-                      min_rating: float = 3.5, min_reviews: int = 5) -> None:
-
+                      min_rating: float = 3.5, min_reviews: int = 2) -> None:
     # Leer archivo JSON
     with open(nombre_archivo_json, 'r', encoding='utf-8') as archivo:
         datos = json.load(archivo)
@@ -205,25 +205,37 @@ def filter_businesses(nombre_archivo_json: Path, ruta_salida: Path, id_inicio: i
     df['slug'] = df['slug'].astype(str).str.strip()
     df['title'] = df['title'].astype(str).str.strip()
 
-    # Eliminar duplicados por slug directamente
+    # Eliminar duplicados por slug
     df = df.drop_duplicates(subset=['slug'])
-    # Eliminar filas sin slug, rating o reviews
-    df.dropna(subset=['slug', 'rating', 'reviews'], inplace=True)
 
-    # Convertir rating y reviews a numéricos
-    df['rating'] = pd.to_numeric(df['rating'], errors='coerce')
-    df['reviews'] = pd.to_numeric(df['reviews'], errors='coerce')
+    # Convertir columnas numéricas
+    df['rating'] = pd.to_numeric(df.get('rating', 0), errors='coerce')
+    df['reviews'] = pd.to_numeric(df.get('reviews', 0), errors='coerce')
 
-    # Filtrar por condiciones de calidad
-    df_filtrado = df[(df['rating'] >= min_rating) & (df['reviews'] >= min_reviews)].copy()
+    # Eliminar negocios sin título válido (title nulo o vacío)
+    df = df[df['title'].notna() & (df['title'].str.lower() != 'none') & (df['title'].str.strip() != '')]
+
+    # Filtrar negocios con suficientes reviews y rating
+    filtro_validados = (df['rating'] >= min_rating) & (df['reviews'] >= min_reviews)
+
+    # Filtrar negocios con 0 reviews pero al menos 1 dato útil
+    filtro_nuevos_utiles = (df['reviews'] == 0) & (
+        df['phone'].notna() | df['web_url'].notna() | df['image_1'].notna() | df['image_2'].notna() | df['image_3'].notna()
+    )
+
+    # Combinar ambos filtros
+    df_filtrado = df[filtro_validados | filtro_nuevos_utiles].copy()
 
     # Agregar ID auto-incremental desde id_inicio
     df_filtrado.insert(0, 'id', range(id_inicio, id_inicio + len(df_filtrado)))
 
-    # Eliminar "&gl=PE" de "reviews_link" y "web_url"
-    df_filtrado['reviews_link'] = df_filtrado['reviews_link'].str.replace('&gl=PE', '', regex=False)
+    # Limpiar campos de enlaces si existen
+    if 'reviews_link' in df_filtrado.columns:
+        df_filtrado['reviews_link'] = df_filtrado['reviews_link'].str.replace('&gl=PE', '', regex=False)
+    if 'web_url' in df_filtrado.columns:
+        df_filtrado['web_url'] = df_filtrado['web_url'].str.replace('&gl=PE', '', regex=False)
 
-    # Guardar archivo en formato JSON
+    # Guardar archivo JSON
     with open(ruta_salida, 'w', encoding='utf-8') as salida:
         json.dump(df_filtrado.to_dict(orient='records'), salida, ensure_ascii=False, indent=2)
 

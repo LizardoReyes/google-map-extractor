@@ -9,7 +9,10 @@ from models.Business import Business, Hour
 from enums.Language import Language
 
 BASE_DIR = Path(__file__).resolve().parent
-JSON_PATH = BASE_DIR / "unavailable_schedule_messages.json"
+JSON_PATH_UNAVAILABLE_SCHEDULE_MSGS = BASE_DIR / "unavailable_schedule_messages.json"
+JSON_PATH_AVAILABLE_REVIEWS_MSGS = BASE_DIR / "available_reviews_messages.json"
+JSON_PATH_UNAVAILABLE_REVIEWS_MSG = BASE_DIR / "unavailable_reviews_messages.json"
+JSON_PATH_BASE_CONTENT_MSGS = BASE_DIR / "base_content_messages.json"
 
 def create_business(data):
     return[Business(item) for item in data]
@@ -29,18 +32,24 @@ def get_base_domain(url):
     return dominio
 
 
-def get_schedule(hours: list[Hour], lang: Language = Language.EN) -> str:
+def get_generic_message(json_file: Path, language: Language = Language.EN) -> str:
 
-    # Cargar el archivo correctamente
-    with open(JSON_PATH, "r", encoding="utf-8") as f:
-        unavailable_messages = json.load(f)
+    # Cargar el archivo JSON con los mensajes
+    with open(json_file, "r", encoding="utf-8") as f:
+        messages = json.load(f)
 
-    # Asegura que exista el idioma
-    mensajes = unavailable_messages.get(lang.value, Language.EN.value)
+    options = messages.get(language.value) or messages.get(Language.EN.value, [])
+    if not options:
+        raise ValueError(f"No messages found for language '{language.value}' in {json_file}")
+
+    return random.choice(options)
+
+
+def get_translated_schedule(hours: list[Hour], lang: Language = Language.EN) -> str:
 
     if len(hours) == 0:
-        mensaje = random.choice(mensajes)
-        return f"<p>{mensaje}</p>"
+        message = get_generic_message(JSON_PATH_UNAVAILABLE_SCHEDULE_MSGS, lang)
+        return f"<p>{message}</p>"
 
     html = "<ul>"
     for item in hours:
@@ -51,6 +60,37 @@ def get_schedule(hours: list[Hour], lang: Language = Language.EN) -> str:
     return html
 
 
+def create_content(title: str, address: str, phone: str, rating: str, web_url: str,
+                   reviews: str, categories: str, city: str, price_range: str, zipcode: str, lang: Language = Language.EN) -> str:
+
+    # Construir texto condicional de reseñas
+    try:
+        reviews_num = int(reviews)
+    except (ValueError, TypeError):
+        reviews_num = 0  # Si es nulo o no convertible
+
+    if reviews_num > 0:
+        reviews_text = get_generic_message(JSON_PATH_AVAILABLE_REVIEWS_MSGS, lang).format(reviews=reviews_num, rating=rating)
+    else:
+        reviews_text = get_generic_message(JSON_PATH_UNAVAILABLE_REVIEWS_MSG, lang)
+
+    plantilla_html = Template(get_generic_message(JSON_PATH_BASE_CONTENT_MSGS, lang))
+
+    return plantilla_html.substitute(
+            title=title,
+            address=address,
+            phone=extract_local_phone(phone),
+            rating=rating,
+            web_url=web_url,
+            web_url_root=get_base_domain(web_url),
+            reviews_text=reviews_text,
+            categories=categories,
+            city=city,
+            price_range=price_range,
+            zipcode=zipcode,
+        )
+
+
 def extract_local_phone(phone: str):
     if not phone:
         return "N/A"
@@ -59,67 +99,47 @@ def extract_local_phone(phone: str):
     return re.sub(r"^\+\d{1,3}\s*", "", phone)
 
 
-def create_content(title: str, address: str, phone: str, rating: str, web_url: str, reviews: str, categories: str, city: str, price_range: str, zipcode: str):
-
-    plantilla_html = Template(
-        "<p>$title is located at $address, in the city of $city with postal code $zipcode "
-        "and offers quality products/services.</p><br/>"
-        "<p>If you want, call $phone to learn about all the products and services they offer. "
-        "It has a rating of $rating/5 based on $reviews reviews on its Google Maps listing.</p><br/>"
-        "<p>It belongs to the $categories category. "
-        "For more information, visit their website: <a href='$web_url' target='_blank' class='underline'>$web_url_root</a>.</p><br/>"
-    )
-
-    return plantilla_html.substitute(
-        title=title,
-        address=address,
-        phone=extract_local_phone(phone),
-        rating=rating,
-        web_url=web_url,
-        web_url_root=get_base_domain(web_url),
-        reviews=reviews,
-        categories=categories,
-        city=city,
-        price_range=price_range,
-        zipcode=zipcode,
-    )
-
 
 def slugify(text: str) -> str:
     if not text:
         return ""
 
+    # 🔤 Mapa de conversión de letras negrita Unicode a ASCII normal
+    bold_map = str.maketrans(
+        "𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳"
+        "𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙",
+        "abcdefghijklmnopqrstuvwxyz"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    )
+    text = text.translate(bold_map)
+
     text = text.lower()
 
-    # Reemplaza todo tipo de espacios (incluye ideográficos, árabes, etc.) por guiones
+    # Reemplaza espacios por guiones
     text = re.sub(r"\s+", "-", text, flags=re.UNICODE)
 
     # Reemplaza símbolos comunes
     text = text.replace("/", "-").replace("&", "-and-")
 
-    # Elimina paréntesis, comillas, puntuación no alfabética
+    # Elimina paréntesis, comillas y puntuación no alfabética
     text = re.sub(r"[\(\)\[\]\{\}<>«»“”\"']", "", text)
 
-    # Elimina caracteres que NO son letras, números, guiones o caracteres CJK/árabes/coreanos
-    text = re.sub(
-        r"[^\w\-一-龯ぁ-んァ-ンーء-ي가-힣]",
-        "",
-        text
-    )
+    # Mantiene letras, números, guiones y letras CJK/árabes/coreanos
+    text = re.sub(r"[^\w\-一-龯ぁ-んァ-ンーء-ي가-힣]", "", text)
 
     # Unifica guiones múltiples
     text = re.sub(r"-{2,}", "-", text)
 
-    # Elimina guiones al inicio o fin
+    # Elimina guiones al inicio o final
     text = text.strip("-")
 
-    # Es posible que el texto sea muy grande, así que lo acorta a 20 caracteres
+    # Limita a 20 caracteres
     if len(text) > 20:
         text = text[:20]
 
-    # Es posible que el texto ya esté vacío después de las transformaciones, entonces randomiza un texto por defecto
+    # Si queda vacío, asigna uno genérico
     if not text:
-        return "business" + str(random.randint(1, 9999))
+        return "business" + str(random.randint(1, 99))
 
     return text
 
