@@ -10,6 +10,7 @@ from partials.helper_csv import merge_json_in_folder, read_json_full, filter_bus
     save_business
 from partials.helpers import create_business, delete_files
 
+
 def main():
     # Unir los archivos JSON de la carpeta "businesses" y guardarlos en un unico archivo JSON
     merge_json_in_folder(carpeta=DIR_BUSINESSES, ruta_salida=FILE_BUSINESSES_JSON_RAW)
@@ -52,8 +53,10 @@ def main():
 
 if __name__ == "__main__":
 
-    # Idioma
-    LANGUAGE = Language.ZH
+    #############################
+    # Configuración de idioma
+    LANGUAGE = Language.FI
+    #############################
 
     # Carpetas
     BASE_DIR = Path(__file__).resolve().parent

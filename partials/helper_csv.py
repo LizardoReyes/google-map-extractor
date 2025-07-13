@@ -98,6 +98,19 @@ def read_json_full(ruta_archivo: Path):
     return data
 
 
+def read_csv_full(ruta_archivo: Path):
+    """
+    Lee un archivo CSV y devuelve su contenido como un DataFrame de pandas.
+    Utiliza PyArrow para mayor eficiencia, con fallback a engine='python' si falla.
+    """
+    try:
+        df = pd.read_csv(ruta_archivo, engine="pyarrow", dtype_backend="pyarrow")
+    except Exception as e:
+        print(f"⚠️ Fallback a engine='python' por error en PyArrow: {e}")
+        df = pd.read_csv(ruta_archivo, engine="python")
+    return df
+
+
 def print_json_data(data):
     """
     Recorre e imprime todos los campos de cada objeto en el JSON, incluyendo estructuras anidadas.
