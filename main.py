@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     #############################
     # Configuración de idioma
-    LANGUAGE = Language.FI
+    LANGUAGE = Language.PT
     #############################
 
     # Carpetas

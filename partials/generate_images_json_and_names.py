@@ -45,6 +45,7 @@ def generate_images_json_and_names(input_json: Path, output_json: Path, image_js
         images_data.append({
             "title": title,
             "city": row.get("city"),
+            "categories": row.get("categories", ""),
             "image": df.at[row.name, "image"],
             "image_1": row.get("image_1", ""),
             "image_2": row.get("image_2", ""),
