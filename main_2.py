@@ -16,20 +16,6 @@ from partials.helpers import create_business, delete_files
 from helpers.find_image_bulk import find_image_bulk
 
 
-def prepare_search_terms(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Crea una nueva columna 'search_term' usando 'categories' si existe y no está vacía;
-    de lo contrario usa 'title'.
-    """
-    def get_term(row):
-        categories = row.get("categories", "")
-        title = row.get("title", "")
-        return categories if str(categories).strip() else str(title).strip()
-
-    df["search_term"] = df.apply(get_term, axis=1)
-    return df
-
-
 def main():
     faltantes_df = read_csv_full(FILE_FALTANTES_CSV)
     if faltantes_df.empty:
@@ -38,13 +24,13 @@ def main():
 
     print(f"🔍 Procesando {len(faltantes_df)} negocios faltantes...")
 
-    # Preparar columna de búsqueda
-    faltantes_df = prepare_search_terms(faltantes_df)
+    # Obtener los campos necesarios de los negocios faltantes
+    titles = faltantes_df["title"].tolist()
+    images = faltantes_df["image"].fillna("").tolist()
+    categories = faltantes_df["categories"].tolist()
+    cities = faltantes_df["city"].tolist()
 
-    image_names = faltantes_df["image"].fillna("").tolist()
-    search_terms = faltantes_df["search_term"].tolist()
-
-    find_image_bulk(search_terms, image_names)
+    find_image_bulk(titles, images)
 
 
 if __name__ == "__main__":
