@@ -31,7 +31,7 @@ def main():
     # Agregamos el campo imagen a los negocios en el CSV filtrado y categorizado
     generate_images_json_and_names(input_json=FILE_BUSINESSES_CATEGORIZED,
                                    output_json=FILE_BUSINESSES_WITH_IMAGES,
-                                   image_json=FILE_IMAGE_JSON)
+                                   output_image_json=FILE_IMAGE_JSON)
 
     # Eliminamos los archivos temporales de negocios
     delete_files(

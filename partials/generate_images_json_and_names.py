@@ -6,7 +6,7 @@ import pandas as pd
 
 from partials.helpers import slugify
 
-def generate_images_json_and_names(input_json: Path, output_json: Path, image_json: Path) -> None:
+def generate_images_json_and_names(input_json: Path, output_json: Path, output_image_json: Path) -> None:
     # Leer archivo JSON de entrada
     with open(input_json, 'r', encoding='utf-8') as f:
         data = json.load(f)
@@ -57,7 +57,7 @@ def generate_images_json_and_names(input_json: Path, output_json: Path, image_js
         json.dump(df.to_dict(orient="records"), f, ensure_ascii=False, indent=2)
 
     # Guardar JSON de imágenes
-    with open(image_json, 'w', encoding='utf-8') as f:
+    with open(output_image_json, 'w', encoding='utf-8') as f:
         json.dump(images_data, f, ensure_ascii=False, indent=2)
 
-    print(f"✅ '{output_json.name}' y '{image_json.name}' generados exitosamente.")
+    print(f"✅ '{output_json.name}' y '{output_image_json.name}' generados exitosamente.")

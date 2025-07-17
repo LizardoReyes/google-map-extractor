@@ -206,6 +206,21 @@ def save_business(business: list[Business], ruta_salida: Path, lang: Language = 
     print(f"✅ Datos guardados en: {ruta_salida.name} ({len(business)} negocios)")
 
 
+def get_numbers_rows(nombre_archivo_json: Path):
+    """
+    Obtiene el número de filas en un archivo JSON que contiene una lista de diccionarios.
+
+    Args:
+        nombre_archivo_json (Path): Ruta al archivo JSON.
+
+    Returns:
+        int: Número de filas en el archivo JSON.
+    """
+    with open(nombre_archivo_json, 'r', encoding='utf-8') as archivo:
+        datos = json.load(archivo)
+    return len(datos)
+
+
 def filter_businesses(nombre_archivo_json: Path, ruta_salida: Path, id_inicio: int = 1,
                       min_rating: float = 3.5, min_reviews: int = 2) -> None:
     # Leer archivo JSON
