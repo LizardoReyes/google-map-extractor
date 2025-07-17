@@ -1,4 +1,5 @@
 import openai
+import os
 import requests
 from pathlib import Path
 from dotenv import load_dotenv

@@ -115,19 +115,23 @@ def merge_categories_and_generate_unique_new_posts(
     df_posts = pd.read_json(posts_file)
     df_new = pd.read_json(new_posts_file)
 
-    # Eliminar duplicados internos en los nuevos por 'slug' y luego por 'title'
-    df_new = (
-        df_new.drop_duplicates(subset="slug", keep="first")
-              .drop_duplicates(subset="title", keep="first")
-    )
+    # Crear columnas temporales en minúscula para comparar duplicados
+    df_new["_title_lower"] = df_new["title"].str.lower()
+    df_new["_slug_lower"] = df_new["slug"].str.lower()
 
-    # Obtener slugs y titles ya existentes en los posts actuales
-    existing_slugs = set(df_posts["slug"])
-    existing_titles = set(df_posts["title"])
+    df_posts["_title_lower"] = df_posts["title"].str.lower()
+    df_posts["_slug_lower"] = df_posts["slug"].str.lower()
 
-    # Eliminar duplicados externos por slug y title (comparando con df_posts)
-    df_new = df_new[~df_new["slug"].isin(existing_slugs)]
-    df_new = df_new[~df_new["title"].isin(existing_titles)]
+    # Eliminar duplicados internos en df_new por slug y luego por title (en minúscula)
+    df_new = df_new.drop_duplicates(subset="_slug_lower", keep="first")
+    df_new = df_new.drop_duplicates(subset="_title_lower", keep="first")
+
+    # Eliminar duplicados externos (comparar con existentes)
+    existing_slugs_lower = set(df_posts["_slug_lower"])
+    existing_titles_lower = set(df_posts["_title_lower"])
+
+    df_new = df_new[~df_new["_slug_lower"].isin(existing_slugs_lower)]
+    df_new = df_new[~df_new["_title_lower"].isin(existing_titles_lower)]
 
     # Asignar nuevos ID a los nuevos posts
     max_post_id = df_posts["id"].max() if not df_posts.empty else 0
@@ -145,9 +149,11 @@ def merge_categories_and_generate_unique_new_posts(
 
     # Combinar categorías y eliminar duplicados por slug
     df_combined_cats = pd.concat([df_cat, df_new_cats], ignore_index=True)
-    df_combined_cats = df_combined_cats.drop_duplicates(subset="slug", keep="first")
+    df_combined_cats["slug_lower"] = df_combined_cats["slug"].str.lower()
+    df_combined_cats = df_combined_cats.drop_duplicates(subset="slug_lower", keep="first")
+    df_combined_cats.drop(columns="slug_lower", inplace=True)
 
-    # Asignar ID a nuevas categorías que no lo tienen
+    # Asignar ID a nuevas categorías
     if "id" not in df_combined_cats or df_combined_cats["id"].isnull().all():
         df_combined_cats["id"] = None
     max_cat_id = df_combined_cats["id"].dropna().max() if not df_combined_cats["id"].dropna().empty else 0
@@ -169,9 +175,51 @@ def merge_categories_and_generate_unique_new_posts(
 
     df_new["category_id"] = df_new["city"].map(city_to_id)
 
+    # Limpiar columnas auxiliares
+    df_new.drop(columns=["_slug_lower", "_title_lower"], inplace=True)
+    df_posts.drop(columns=["_slug_lower", "_title_lower"], inplace=True)
+
     # Guardar resultados
     df_new.to_json(output_new_posts_file, orient="records", indent=2, force_ascii=False)
     df_combined_cats.sort_values("id").to_json(output_categories_file, orient="records", indent=2, force_ascii=False)
 
-    print(f"✅ Nuevos negocios únicos guardados en: {output_new_posts_file}")
+    print(f"✅ Nuevos negocios únicos (slug/title insensitive) guardados en: {output_new_posts_file}")
     print(f"✅ Categorías consolidadas en: {output_categories_file}")
+
+
+def deduplicate_categories_by_slug_and_fix_posts(
+    categories_file: Path,
+    posts_file: Path,
+    output_categories_file: Path,
+    output_posts_file: Path
+):
+    # Leer archivos
+    df_cat = pd.read_json(categories_file)
+    df_posts = pd.read_json(posts_file)
+
+    # Normalizar slug para detectar duplicados (case insensitive)
+    df_cat["slug_lower"] = df_cat["slug"].str.lower()
+
+    # Agrupar por slug_lower y conservar el id más pequeño
+    slug_to_main_id = df_cat.groupby("slug_lower")["id"].min().to_dict()
+
+    # Crear mapa: cada id original → id principal (el de menor id con ese slug)
+    id_to_slug_lower = dict(zip(df_cat["id"], df_cat["slug_lower"]))
+    id_map = {old_id: slug_to_main_id[slug] for old_id, slug in id_to_slug_lower.items()}
+
+    # Actualizar category_id en posts.json
+    df_posts["category_id"] = df_posts["category_id"].map(id_map)
+
+    # Filtrar categorías para conservar solo los de id principal
+    ids_a_conservar = set(slug_to_main_id.values())
+    df_cat_clean = df_cat[df_cat["id"].isin(ids_a_conservar)].drop(columns=["slug_lower"])
+
+    # Guardar resultados
+    df_cat_clean.to_json(output_categories_file, orient="records", indent=2, force_ascii=False)
+    df_posts.to_json(output_posts_file, orient="records", indent=2, force_ascii=False)
+
+    # Reporte
+    eliminadas = len(df_cat) - len(df_cat_clean)
+    print(f"✅ {eliminadas} categorías duplicadas por slug eliminadas.")
+    print(f"📁 Categorías deduplicadas: {output_categories_file}")
+    print(f"📁 Posts actualizados: {output_posts_file}")

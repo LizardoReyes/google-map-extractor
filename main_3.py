@@ -8,13 +8,23 @@ from pathlib import Path
 from converts.convert_json_to_csv import convert_json_to_csv
 from converts.convert_json_to_sqlite import convert_json_to_sqlite
 from enums.Language import Language
-from partials.categorize_businesses import merge_json_files_unique, merge_categories_and_generate_unique_new_posts
+from partials.categorize_businesses import merge_json_files_unique, merge_categories_and_generate_unique_new_posts, \
+    deduplicate_categories_by_slug_and_fix_posts
 from partials.generate_images_json_and_names import generate_images_json_and_names
 from partials.helper_csv import merge_json_in_folder, read_json_full, save_business, filter_businesses
 from partials.helpers import create_business, delete_files
 
 
 def main():
+
+    # Esto es para arreglar el archivo original de posts.json y categories.json
+    deduplicate_categories_by_slug_and_fix_posts(
+        posts_file=FILE_POSTS_ORIGINAL_JSON,
+        categories_file=FILE_CATEGORIES_ORIGINAL_JSON,
+        output_posts_file=FILE_POSTS_ORIGINAL_JSON,
+        output_categories_file=FILE_CATEGORIES_ORIGINAL_JSON,
+    )
+
     # Unir los archivos JSON de la carpeta "businesses" y guardarlos en un unico archivo JSON
     merge_json_in_folder(carpeta=DIR_BUSINESSES, ruta_salida=FILE_BUSINESSES_JSON_RAW)
 
@@ -54,13 +64,13 @@ def main():
     )
 
     # Creamos la version en CSV
-    #convert_json_to_csv(json_path=FILE_NEW_POSTS_JSON, csv_path=FILE_NEW_POSTS_CSV)
-    #convert_json_to_csv(json_path=FILE_MERGED_POSTS_JSON, csv_path=FILE_MERGED_POSTS_CSV)
-    #convert_json_to_csv(json_path=FILE_MERGED_CATEGORIES_JSON, csv_path=FILE_MERGED_CATEGORIES_CSV)
+    convert_json_to_csv(json_path=FILE_NEW_POSTS_JSON, csv_path=FILE_NEW_POSTS_CSV)
+    convert_json_to_csv(json_path=FILE_MERGED_POSTS_JSON, csv_path=FILE_MERGED_POSTS_CSV)
+    convert_json_to_csv(json_path=FILE_MERGED_CATEGORIES_JSON, csv_path=FILE_MERGED_CATEGORIES_CSV)
 
     # Eliminamos los archivos temporales de negocios
     delete_files([FILE_BUSINESSES_JSON, FILE_BUSINESSES_FILTERED, FILE_PRE_NEW_POSTS_JSON])
-    #os.rename(FILE_BUSINESSES_WITH_IMAGES, FILE_NEW_POSTS_JSON)
+    # os.rename(FILE_BUSINESSES_WITH_IMAGES, FILE_NEW_POSTS_JSON)
 
     # Convertimos los archivos JSON de posts y categorías a una base de datos SQLite
     convert_json_to_sqlite(
@@ -86,8 +96,10 @@ if __name__ == "__main__":
 
     # Categorías y posts
     FILE_POSTS_ORIGINAL_JSON = BASE_INPUT_DIR / "posts.json"
+    FILE_POSTS_ORIGINAL_JSON2 = BASE_INPUT_DIR / "posts2.json"
     FILE_POSTS_ORIGINAL_CSV = BASE_INPUT_DIR / "posts.csv"
     FILE_CATEGORIES_ORIGINAL_JSON = BASE_INPUT_DIR / "categories.json"
+    FILE_CATEGORIES_ORIGINAL_JSON2 = BASE_INPUT_DIR / "categories2.json"
     FILE_CATEGORIES_ORIGINAL_CSV = BASE_INPUT_DIR / "categories.csv"
 
     FILE_MERGED_CATEGORIES_JSON = BASE_OUTPUT_DIR / "categories.json"

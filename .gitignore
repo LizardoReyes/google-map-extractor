@@ -162,6 +162,7 @@ cython_debug/
 
 # Extras
 nn/
+input/*
 output/*
 images/*
 businesses/*
@@ -170,6 +171,7 @@ __pycache__/
 *.pyo
 
 # Exceptions
+!input/.gitkeep
 !output/.gitkeep
 !images/.gitkeep
 !businesses/.gitkeep
