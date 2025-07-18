@@ -23,9 +23,9 @@ def convert_csv_to_json(csv_path: Path, json_path: Path, orient: str = "records"
 
 def main():
     # Definir rutas de entrada y salida
-    post_csv_file = Path("../output/posts.csv")
+    post_csv_file = Path("../input/posts.csv")
     post_json_file = Path("../output/posts.json")
-    #categories_csv_file = Path("../output/categories.csv")
+    #categories_csv_file = Path("../input/categories.csv")
     #categories_json_file = Path("../output/categories.json")
 
     # Verificar existencia del archivo CSV

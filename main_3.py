@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     #############################
     # Configuración de idioma
-    LANGUAGE = Language.RO
+    LANGUAGE = Language.CS
     #############################
 
     # Carpetas
