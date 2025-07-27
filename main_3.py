@@ -1,4 +1,4 @@
-""" Script cuando tengas que agregar nuevos negocios a un directorio con datos ya 
+""" Script cuando tengas que AGREGAR NUEVOS NEGOCIOS a un directorio con datos ya existentes.
     - Es necesario que existan los archivos:
         - output/posts.json
         - output/categories.json

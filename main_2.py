@@ -1,4 +1,6 @@
-"""Script para procesar negocios faltantes y buscar una imagen para cada uno."""
+"""
+    Script para procesar negocios faltantes y BUSCAR IMAGEN para cada uno.
+"""
 
 import os
 import pandas as pd

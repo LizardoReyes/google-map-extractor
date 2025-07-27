@@ -1,3 +1,6 @@
+"""
+    SCRIPT PRINCIPAL para procesar negocios y generar archivos JSON, CSV y SQLite.
+"""
 import os
 from pathlib import Path
 
@@ -55,7 +58,7 @@ if __name__ == "__main__":
 
     #############################
     # Configuración de idioma
-    LANGUAGE = Language.PT
+    LANGUAGE = Language.FI
     #############################
 
     # Carpetas

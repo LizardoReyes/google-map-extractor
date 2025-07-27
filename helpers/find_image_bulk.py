@@ -1,7 +1,6 @@
 from pathlib import Path
 import requests
 import hashlib
-import openai
 import os
 import replicate
 from PIL import Image
@@ -13,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Claves API
-VERSION = 1
+VERSION = 3
 PEXELS_API_KEY = os.getenv("PEXELS_API_KEY_" + str(VERSION))
 UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY_" + str(VERSION))
 PIXABAY_API_KEY = os.getenv("PIXABAY_API_KEY_" + str(VERSION))
