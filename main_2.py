@@ -12,7 +12,7 @@ from converts.convert_json_to_sqlite import convert_json_to_sqlite
 from enums.Language import Language
 from partials.categorize_businesses import generate_categories_from_posts_json
 from partials.generate_images_json_and_names import generate_images_json_and_names
-from partials.helper_csv import merge_json_in_folder, filter_businesses, \
+from partials.helper_csv import merge_json_folder, filter_businesses, \
     save_business, read_csv_full
 from partials.helpers import create_business, delete_files
 from helpers.find_image_bulk import find_image_bulk

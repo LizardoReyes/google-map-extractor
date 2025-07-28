@@ -1,5 +1,5 @@
 """
-    SCRIPT PRINCIPAL para procesar negocios y generar archivos JSON, CSV y SQLite.
+    SCRIPT QUICKSCRAPE para procesar negocios y generar archivos JSON, CSV y SQLite.
 """
 import os
 from pathlib import Path
@@ -7,21 +7,23 @@ from pathlib import Path
 from converts.convert_json_to_csv import convert_json_to_csv
 from converts.convert_json_to_sqlite import convert_json_to_sqlite
 from enums.Language import Language
+from parse_csv_fields import parse_csv_fields_to_json
 from partials.categorize_businesses import generate_categories_from_posts_json
 from partials.generate_images_json_and_names import generate_images_json_and_names
 from partials.helper_csv import merge_json_folder, read_json_full, filter_businesses, \
-    save_business
-from partials.helpers import create_business, delete_files
+    save_business, merge_csv_folder, read_csv_full, save_business_2
+from partials.helpers import create_business, delete_files, create_bussiness_2
 
 
 def main():
     # Unir los archivos JSON de la carpeta "businesses" y guardarlos en un unico archivo JSON
-    merge_json_folder(carpeta=DIR_BUSINESSES, ruta_salida=FILE_BUSINESSES_JSON_RAW)
+    merge_csv_folder(carpeta=DIR_BUSINESSES, salida=FILE_BUSINESSES_CSV_RAW)
 
-    # Leemos un archivo JSON, creamos objetos Business y guardamos en un nuevo archivo JSON
-    raw_data = read_json_full(ruta_archivo=FILE_BUSINESSES_JSON_RAW)
-    business = create_business(raw_data)
-    save_business(business=business, ruta_salida=FILE_BUSINESSES_JSON, lang=LANGUAGE)
+    # Leemos un archivo CSV, creamos objetos Business y guardamos en un nuevo archivo JSON
+    parse_csv_fields_to_json(input_csv=FILE_BUSINESSES_CSV_RAW, output_json=FILE_BUSINESSES_JSON)
+    raw_data = read_json_full(ruta_archivo=FILE_BUSINESSES_JSON)
+    business = create_bussiness_2(raw_data)
+    save_business_2(business=business, ruta_salida=FILE_BUSINESSES_JSON, lang=LANGUAGE)
 
     # Filtramos los negocios por ciertas condiciones
     filter_businesses(nombre_archivo_json=FILE_BUSINESSES_JSON, ruta_salida=FILE_BUSINESSES_FILTERED, id_inicio=1)
@@ -38,8 +40,8 @@ def main():
 
     # Eliminamos los archivos temporales de negocios
     delete_files(
-        [FILE_BUSINESSES_JSON_RAW, FILE_BUSINESSES_JSON, FILE_BUSINESSES_FILTERED, FILE_BUSINESSES_CATEGORIZED,
-         FILE_POSTS_CSV, FILE_POSTS_JSON])
+        [FILE_BUSINESSES_JSON_RAW, FILE_BUSINESSES_CSV_RAW, FILE_BUSINESSES_JSON, FILE_BUSINESSES_FILTERED,
+         FILE_BUSINESSES_CATEGORIZED, FILE_POSTS_CSV, FILE_POSTS_JSON])
     os.rename(FILE_BUSINESSES_WITH_IMAGES, FILE_POSTS_JSON)
 
     # Creamos la version en CSV
@@ -75,6 +77,7 @@ if __name__ == "__main__":
 
     # Archivos JSON y CSV
     FILE_BUSINESSES_JSON_RAW = BASE_OUTPUT_DIR / "businesses_raw.json"
+    FILE_BUSINESSES_CSV_RAW = BASE_OUTPUT_DIR / "businesses_raw.csv"
     FILE_BUSINESSES_JSON = BASE_OUTPUT_DIR / "businesses.json"
     FILE_BUSINESSES_FILTERED = BASE_OUTPUT_DIR / "businesses_filtered.json"
     FILE_BUSINESSES_CATEGORIZED = BASE_OUTPUT_DIR / "businesses_final.json"

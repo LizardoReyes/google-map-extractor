@@ -5,9 +5,12 @@ from pathlib import Path
 
 import pandas as pd
 
+from models import Business2
 from models.Business import Business
 from enums.Language import Language
-from partials.helpers import get_base_domain, create_content, get_translated_schedule, slugify
+from partials.helpers import get_base_domain, create_content, get_translated_schedule, slugify, \
+    get_translated_schedule_2
+
 
 def read_csv(csv_path: Path, *, fallback_engine: str = "python", dtype_backend: str = "pyarrow") -> pd.DataFrame:
     """
@@ -28,7 +31,38 @@ def read_csv(csv_path: Path, *, fallback_engine: str = "python", dtype_backend: 
         return pd.read_csv(csv_path, engine=fallback_engine)
 
 
-def merge_json_in_folder(carpeta: Path, ruta_salida: Path) -> None:
+def merge_csv_folder(carpeta: Path, salida: Path) -> None:
+    """
+    Combina todos los archivos CSV en una carpeta en un único archivo CSV de salida.
+
+    Args:
+        carpeta (Path): Ruta a la carpeta que contiene los archivos CSV.
+        salida (Path): Ruta del archivo CSV de salida combinado.
+    """
+    archivos = [f for f in os.listdir(carpeta) if f.endswith(".csv")]
+    encabezado_escrito = False
+
+    with open(salida, 'w', newline='', encoding='utf-8') as archivo_salida:
+        writer = None
+
+        for archivo in archivos:
+            ruta = os.path.join(carpeta, archivo)
+            with open(ruta, 'r', encoding='utf-8') as archivo_entrada:
+                reader = csv.reader(archivo_entrada)
+                encabezado = next(reader)
+
+                if not encabezado_escrito:
+                    writer = csv.writer(archivo_salida)
+                    writer.writerow(encabezado)
+                    encabezado_escrito = True
+
+                for fila in reader:
+                    writer.writerow(fila)
+
+    print(f"✅ Archivos combinados en: {salida}")
+
+
+def merge_json_folder(carpeta: Path, ruta_salida: Path) -> None:
     datos_unidos = []
 
     for archivo in carpeta.iterdir():
@@ -204,6 +238,80 @@ def save_business(business: list[Business], ruta_salida: Path, lang: Language = 
         json.dump(datos_json, archivo, ensure_ascii=False, indent=2)
 
     print(f"✅ Datos guardados en: {ruta_salida.name} ({len(business)} negocios)")
+
+
+def save_business_2(business: list[Business2], ruta_salida: Path, lang: Language = Language.EN) -> None:
+    datos_json = []
+
+    for negocio in business:
+        title = negocio.name
+        slug = slugify(title)
+        rating = negocio.rating
+        reviews = negocio.reviews
+        reviews_link = negocio.reviews_link
+        web_url = negocio.website or reviews_link
+        web_url_root = negocio.web_url_root or get_base_domain(web_url)
+        phone = negocio.phone
+        image_1 = negocio.image_1 if negocio.image_1 else None
+        image_2 = negocio.image_2 if negocio.image_2 else None
+        image_3 = negocio.image_3 if negocio.image_3 else None
+        categories = ", ".join(negocio.categories).lower() if negocio.categories else "N/A"
+        address = negocio.address
+        google_maps = negocio.reviews_link
+        price_range = None
+        zipcode = negocio.zip_code if negocio.zip_code else "N/A"
+        state = negocio.province if negocio.province else "General"
+        city = negocio.city if negocio.city else state
+        hoary = get_translated_schedule_2(negocio.hours, lang)
+        link_menu = None
+        link_reservations = None
+        link_order_online = None
+
+        content = create_content(
+            title=title,
+            address=address,
+            phone=phone,
+            rating=rating,
+            reviews=reviews,
+            web_url=web_url,
+            categories=categories,
+            price_range=price_range,
+            zipcode=zipcode,
+            city=city,
+            lang=lang,
+        )
+
+        datos_json.append({
+            "title": title,
+            "slug": slug,
+            "rating": rating,
+            "reviews": reviews,
+            "reviews_link": reviews_link,
+            "web_url": web_url,
+            "web_url_root": web_url_root,
+            "phone": phone,
+            "image_1": image_1,
+            "image_2": image_2,
+            "image_3": image_3,
+            "categories": categories,
+            "address": address,
+            "google_maps_url": google_maps,
+            "price_range": price_range,
+            "zipcode": zipcode,
+            "city": city,
+            "state": state,
+            "hoary": hoary,
+            "link_menu": link_menu,
+            "link_reservations": link_reservations,
+            "link_order_online": link_order_online,
+            "content": content,
+        })
+
+    with ruta_salida.open('w', encoding='utf-8') as archivo:
+        json.dump(datos_json, archivo, ensure_ascii=False, indent=2)
+
+    print(f"✅ Datos guardados en: {ruta_salida.name} ({len(business)} negocios)")
+
 
 
 def get_numbers_rows(nombre_archivo_json: Path):

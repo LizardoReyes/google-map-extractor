@@ -14,7 +14,7 @@ from helpers.helpers_wordpress import reemplazar_su_gmap_por_iframe, centrar_h4_
     limpiar_adinserter_y_img, convertir_etiquetas_p_b_minuscula, filtrar_json_por_slugs
 from partials.categorize_businesses import generate_categories_from_posts_json
 from partials.generate_images_json_and_names import generate_images_json_and_names
-from partials.helper_csv import merge_json_in_folder, read_json_full, filter_businesses, \
+from partials.helper_csv import merge_json_folder, read_json_full, filter_businesses, \
     save_business
 from partials.helpers import create_business, delete_files
 

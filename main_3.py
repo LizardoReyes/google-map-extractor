@@ -11,7 +11,7 @@ from enums.Language import Language
 from partials.categorize_businesses import merge_json_files_unique, merge_categories_and_generate_unique_new_posts, \
     deduplicate_categories_by_slug_and_fix_posts
 from partials.generate_images_json_and_names import generate_images_json_and_names
-from partials.helper_csv import merge_json_in_folder, read_json_full, save_business, filter_businesses
+from partials.helper_csv import merge_json_folder, read_json_full, save_business, filter_businesses
 from partials.helpers import create_business, delete_files
 
 
@@ -26,7 +26,7 @@ def main():
     )
 
     # Unir los archivos JSON de la carpeta "businesses" y guardarlos en un unico archivo JSON
-    merge_json_in_folder(carpeta=DIR_BUSINESSES, ruta_salida=FILE_BUSINESSES_JSON_RAW)
+    merge_json_folder(carpeta=DIR_BUSINESSES, ruta_salida=FILE_BUSINESSES_JSON_RAW)
 
     # Leemos un archivo JSON, creamos objetos Business y guardamos en un nuevo archivo JSON
     raw_data = read_json_full(ruta_archivo=FILE_BUSINESSES_JSON_RAW)

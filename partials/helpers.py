@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 from models.Business import Business, Hour
 from enums.Language import Language
+from models.Business2 import Business2
 
 BASE_DIR = Path(__file__).resolve().parent
 JSON_PATH_UNAVAILABLE_SCHEDULE_MSGS = BASE_DIR / "unavailable_schedule_messages.json"
@@ -16,6 +17,10 @@ JSON_PATH_BASE_CONTENT_MSGS = BASE_DIR / "base_content_messages.json"
 
 def create_business(data):
     return[Business(item) for item in data]
+
+
+def create_bussiness_2(data):
+    return [Business2(item) for item in data]
 
 
 def get_base_domain(url):
@@ -56,6 +61,18 @@ def get_translated_schedule(hours: list[Hour], lang: Language = Language.EN) -> 
         day = item.day
         times = ", ".join(item.times)
         html += f'<li><b>{day}:</b> {times}</li>'
+    html += "</ul>"
+    return html
+
+
+def get_translated_schedule_2(hours: dict, lang: Language = Language.EN) -> str:
+    if not hours:
+        message = get_generic_message(JSON_PATH_UNAVAILABLE_SCHEDULE_MSGS, lang)
+        return f"<p>{message}</p>"
+
+    html = "<ul>"
+    for day, times in hours.items():
+        html += f'<li><b>{day.capitalize()}:</b> {times}</li>'
     html += "</ul>"
     return html
 
